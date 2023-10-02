@@ -49,7 +49,7 @@ export default async function handler(
       chat_history: history || [],
     });
 
-    console.log('response text'  + questionId + ' ', JSON.stringify(response["text"]));
+    console.log('response text '  + questionId + ' ', JSON.stringify(response["text"]));
     response["sourceDocuments"].forEach( (doc: Document) => {
           console.log('response source doc ' + questionId + ' ', doc.metadata["source"] , doc.metadata["loc.pageNumber"], doc.pageContent.split('\n').join(' '))
         }
