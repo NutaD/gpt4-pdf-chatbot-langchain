@@ -4,6 +4,8 @@ import { PineconeStore } from 'langchain/vectorstores/pinecone';
 import { makeChain } from '@/utils/makechain';
 import { pinecone } from '@/utils/pinecone-client';
 import { PINECONE_INDEX_NAME, PINECONE_NAME_SPACE } from '@/config/pinecone';
+import {randomUUID} from "crypto";
+import {Document} from "langchain/document";
 
 export default async function handler(
   req: NextApiRequest,
@@ -11,7 +13,8 @@ export default async function handler(
 ) {
   const { question, history } = req.body;
 
-  console.log('question', question);
+  const questionId = randomUUID();
+  console.log('question ' + questionId + ' ', JSON.stringify(question));
 
   //only accept post requests
   if (req.method !== 'POST') {
@@ -46,7 +49,12 @@ export default async function handler(
       chat_history: history || [],
     });
 
-    console.log('response', response);
+    console.log('response text'  + questionId + ' ', JSON.stringify(response["text"]));
+    response["sourceDocuments"].forEach( (doc: Document) => {
+          console.log('response source doc ' + questionId + ' ', doc.metadata["source"] , doc.metadata["loc.pageNumber"], doc.pageContent.split('\n').join(' '))
+        }
+    )
+
     res.status(200).json(response);
   } catch (error: any) {
     console.log('error', error);
