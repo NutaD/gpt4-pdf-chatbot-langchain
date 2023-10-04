@@ -123,7 +123,17 @@ export default function Home() {
     }
 
     async function handleFeedback(type: 'like' | 'dislike', messageIndex: number) {
-        console.log(`User gave a ${type} feedback`);
+        console.log(`User gave a ${type} feedback for message index ${messageIndex}`);
+        // If feedback for this message hasn't changed, return.
+        if (feedbackState[messageIndex] === type) {
+            console.log(`Feedback for message index ${messageIndex} remains the same. Not sending again.`);
+            return;
+        }
+
+        // If feedback for this message was previously set and is now being changed, log the change.
+        if (feedbackState[messageIndex]) {
+            console.log(`Feedback for message index ${messageIndex} changed from ${feedbackState[messageIndex]} to ${type}.`);
+        }
         setFeedbackState(prev => ({ ...prev, [messageIndex]: type }));
 
         try {
