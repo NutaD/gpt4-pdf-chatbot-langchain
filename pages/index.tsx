@@ -7,6 +7,10 @@ import ReactMarkdown from 'react-markdown';
 import LoadingDots from '@/components/ui/LoadingDots';
 import {Document} from 'langchain/document';
 import Path from 'path';
+import {randomUUID} from "crypto"; // Add this import
+import { v4 as uuidv4 } from 'uuid';
+
+
 import {
     Accordion,
     AccordionContent,
@@ -37,10 +41,13 @@ export default function Home() {
 
     const messageListRef = useRef<HTMLDivElement>(null);
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
+    const [feedbackState, setFeedbackState] = useState<{ [key: number]: 'like' | 'dislike' | null }>({});
+    const [questionId, setQuestionId] = useState<string | null>(null);
 
     useEffect(() => {
         textAreaRef.current?.focus();
     }, []);
+
 
     //handle form submission
     async function handleSubmit(e: any) {
@@ -53,6 +60,8 @@ export default function Home() {
             return;
         }
 
+        const generatedQuestionId = uuidv4(); // Generate questionId here
+        setQuestionId(generatedQuestionId);
         const question = query.trim();
 
         setMessageState((state) => ({
@@ -78,6 +87,7 @@ export default function Home() {
                 body: JSON.stringify({
                     question,
                     history,
+                    questionId: generatedQuestionId, // Send questionId to the server
                 }),
             });
             const data = await response.json();
@@ -110,6 +120,27 @@ export default function Home() {
             setError('An error occurred while fetching the data. Please try again.');
             console.log('error', error);
         }
+    }
+
+    async function handleFeedback(type: 'like' | 'dislike', messageIndex: number) {
+        console.log(`User gave a ${type} feedback`);
+        setFeedbackState(prev => ({ ...prev, [messageIndex]: type }));
+
+        try {
+            await fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    feedback: type,
+                    questionId // Send questionId during feedback
+                })
+            });
+        } catch (error) {
+            console.error('Error sending feedback:', error);
+        }
+        // You can expand upon this to send this feedback to a server or record it in some other way
     }
 
     //prevent empty submissions
@@ -212,6 +243,18 @@ export default function Home() {
                                                             </div>
                                                         ))}
                                                     </Accordion>
+                                                    <div className="my-2">
+                                                        <button
+                                                            className={`mr-3 px-4 py-2 rounded ${feedbackState[index] === 'like' ? 'bg-green-700' : 'bg-green-500'} text-white`}
+                                                            onClick={() => handleFeedback('like', index)}>
+                                                            👍 Like
+                                                        </button>
+                                                        <button
+                                                            className={`px-4 py-2 rounded ${feedbackState[index] === 'dislike' ? 'bg-red-700' : 'bg-red-500'} text-white`}
+                                                            onClick={() => handleFeedback('dislike',index)}>
+                                                            👎 Dislike
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             )}
                                         </>

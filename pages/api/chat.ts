@@ -4,16 +4,22 @@ import { PineconeStore } from 'langchain/vectorstores/pinecone';
 import { makeChain } from '@/utils/makechain';
 import { pinecone } from '@/utils/pinecone-client';
 import { PINECONE_INDEX_NAME, PINECONE_NAME_SPACE } from '@/config/pinecone';
-import {randomUUID} from "crypto";
 import {Document} from "langchain/document";
+
+
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const { question, history } = req.body;
+  const { question, history, feedback,questionId} = req.body;
 
-  const questionId = randomUUID();
+    // If feedback is present, log it and end the response
+  if (feedback) {
+    console.log( 'feedback ' + questionId + ' ', JSON.stringify(feedback));
+    return res.status(200).json({ message: 'Feedback logged successfully' });
+  }
+
   console.log('question ' + questionId + ' ', JSON.stringify(question));
 
   //only accept post requests
