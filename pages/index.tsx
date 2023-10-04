@@ -124,16 +124,6 @@ export default function Home() {
 
     async function handleFeedback(type: 'like' | 'dislike', messageIndex: number) {
         console.log(`User gave a ${type} feedback for message index ${messageIndex}`);
-        // If feedback for this message hasn't changed, return.
-        if (feedbackState[messageIndex] === type) {
-            console.log(`Feedback for message index ${messageIndex} remains the same. Not sending again.`);
-            return;
-        }
-
-        // If feedback for this message was previously set and is now being changed, log the change.
-        if (feedbackState[messageIndex]) {
-            console.log(`Feedback for message index ${messageIndex} changed from ${feedbackState[messageIndex]} to ${type}.`);
-        }
         setFeedbackState(prev => ({ ...prev, [messageIndex]: type }));
 
         try {
@@ -256,12 +246,16 @@ export default function Home() {
                                                     <div className="my-2">
                                                         <button
                                                             className={`mr-3 px-4 py-2 rounded ${feedbackState[index] === 'like' ? 'bg-green-700' : 'bg-green-500'} text-white`}
-                                                            onClick={() => handleFeedback('like', index)}>
+                                                            onClick={() => handleFeedback('like', index)}
+                                                            disabled={feedbackState[index] !== undefined}
+                                                        >
                                                             👍 Like
                                                         </button>
                                                         <button
                                                             className={`px-4 py-2 rounded ${feedbackState[index] === 'dislike' ? 'bg-red-700' : 'bg-red-500'} text-white`}
-                                                            onClick={() => handleFeedback('dislike',index)}>
+                                                            onClick={() => handleFeedback('dislike', index)}
+                                                            disabled={feedbackState[index] !== undefined}
+                                                        >
                                                             👎 Dislike
                                                         </button>
                                                     </div>
