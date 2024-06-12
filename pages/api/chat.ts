@@ -1,3 +1,4 @@
+import fs from 'fs';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import type { Document } from 'langchain/document';
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
@@ -6,17 +7,35 @@ import { makeChain } from '@/utils/makechain';
 import { pinecone } from '@/utils/pinecone-client';
 import { PINECONE_INDEX_NAME, PINECONE_NAME_SPACE } from '@/config/pinecone';
 
+// Create write streams for the id register main log and the feedback log
+//const fblogStream = fs.createWriteStream('fblog.txt', { flags: 'a' }); // 'a' flag for appending
+const idregstream = fs.createWriteStream('idreg.txt', { flags: 'a' }); // 'a' flag for appending
+const logstream = fs.createWriteStream('log.txt', {flags: 'a' }); // 'a' flag for appending
+
+let logfb = 'feedback null' + '\n'; //initialises logfb to be used to carry feedback from the feedback handler
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const { question, history, feedback,questionId} = req.body;
+  const {question, history, feedback, questionId} = req.body;
 
-    // If feedback is present, log it and end the response
+  // If feedback is present, log it and end the response, else set variable for feedback to be null
+  // this function writes feedback information to both feedback register and the feedback log
+  // while also outputting feedback to the console
   if (feedback) {
-    console.log( 'feedback ' + questionId + ' ', JSON.stringify(feedback));
-    return res.status(200).json({ message: 'Feedback logged successfully' });
-  }
+    console.log('feedback ' + questionId + ' ', JSON.stringify(feedback));
+
+    logfb = 'feedback ' + JSON.stringify(feedback) + '\n';
+    //const fblog = questionId + ' feedback ' + JSON.stringify(feedback) + '\n';
+    const idreg = questionId + '\n';
+    //fblogStream.write(fblog);
+    idregstream.write(idreg);
+
+   return res.status(200).json({message: 'Feedback logged successfully'});
+  } //else {
+   //logfb = 'feedback null' + '\n';
+  //}
 
   console.log('question ' + questionId + ' ', JSON.stringify(question));
 
@@ -58,7 +77,7 @@ export default async function handler(
           },
         },
       ],
-      k:10,
+      k:4,
     });
 
     //create chain
@@ -84,6 +103,9 @@ export default async function handler(
 //          console.log('response source doc ' + questionId + ' ', doc.metadata["source"] , doc.metadata["loc.pageNumber"], doc.pageContent.split('\n').join(' '))
 //        }
 //    )
+    // this writes the main log by concatenating on each new line the id, question, answer, and the feedback
+  const logs = questionId + '\n' + 'question ' + question + '\n' + 'response ' + response + '\n' + logfb
+    logstream.write(logs);
 
 //    res.status(200).json(response);
     console.log('response', response);
