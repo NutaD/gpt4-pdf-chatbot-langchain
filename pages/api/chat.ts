@@ -7,6 +7,7 @@ import { makeChain } from '@/utils/makechain';
 import { pinecone } from '@/utils/pinecone-client';
 import { PINECONE_INDEX_NAME, PINECONE_NAME_SPACE } from '@/config/pinecone';
 
+
 // Create write streams for the id register main log and the feedback log
 //const fblogStream = fs.createWriteStream('fblog.txt', { flags: 'a' }); // 'a' flag for appending
 const idregstream = fs.createWriteStream('idreg.txt', { flags: 'a' }); // 'a' flag for appending
@@ -31,7 +32,7 @@ export default async function handler(
     const idreg = questionId + '\n';
     //fblogStream.write(fblog);
     idregstream.write(idreg);
-
+    logstream.write(logfb);
    return res.status(200).json({message: 'Feedback logged successfully'});
   } //else {
    //logfb = 'feedback null' + '\n';
@@ -104,7 +105,7 @@ export default async function handler(
 //        }
 //    )
     // this writes the main log by concatenating on each new line the id, question, answer, and the feedback
-  const logs = questionId + '\n' + 'question ' + question + '\n' + 'response ' + response + '\n' + logfb
+  const logs = questionId + '\n' + 'question ' + question + '\n' + 'response ' + response + '\n'
     logstream.write(logs);
 
 //    res.status(200).json(response);
