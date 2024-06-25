@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import axios from 'axios';
-import {v4 as uuidv4} from "uuid";
+import { v4 as uuidv4 } from "uuid";
 
 interface ApiResponse {
   text: string;
@@ -8,6 +8,8 @@ interface ApiResponse {
 }
 
 const questionId = uuidv4();
+const fileName = 'generated_answers.txt';
+const fileQuestions = 'questions_comprehensive.txt';
 
 // Read questions from the file
 async function readQuestionsFromFile(filePath: string): Promise<string[]> {
@@ -23,17 +25,18 @@ async function processQuestions(questions: string[]) {
       const requestData = {
         question: question,
         history: [],
-        questionId: questionId
+        questionId: questionId,
+        maxTokens: 150
       };
 
       const response = await axios.post<ApiResponse>('http://localhost:3000/api/chat', requestData);
       const responseBody = response.data;
-      const logMessage = `Question: ${question}\nText field: ${responseBody.text}\n`;
+      const logMessage = `Q: ${question}\nA: ${responseBody.text}\n`;
 
       console.log(logMessage);
 
       // Append log to a file
-      await fs.appendFile('http-requests-log.txt', logMessage, { flag: 'a' });
+      await fs.appendFile(fileName, logMessage, { flag: 'a' });
     } catch (error) {
       let errorMessage = 'Unknown error';
       if (error instanceof Error) {
@@ -45,14 +48,17 @@ async function processQuestions(questions: string[]) {
       }
 
       console.error("Error: ", errorMessage);
-      await fs.appendFile('http-requests-log.txt', `Error: ${errorMessage}\n`, { flag: 'a' });
+      await fs.appendFile(fileName, `Error: ${errorMessage}\n`, { flag: 'a' });
     }
   }
 }
 
 // Main function to execute the process
 async function main() {
-  const questions = await readQuestionsFromFile('questions.txt');
+  // Clear the contents of the file before every run
+  await fs.writeFile(fileName, '');
+
+  const questions = await readQuestionsFromFile(fileQuestions);
   await processQuestions(questions);
 }
 

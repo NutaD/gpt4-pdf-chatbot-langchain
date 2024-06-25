@@ -18,11 +18,14 @@
     "@microsoft/fetch-event-source": "^2.0.1",
     "@pinecone-database/pinecone": "^2.2.1",
     "@radix-ui/react-accordion": "^1.1.1",
+    "axios": "^1.7.2",
     "clsx": "^1.2.1",
     "dotenv": "^16.0.3",
+    "json2csv": "^6.0.0-alpha.2",
     "langchain": "^0.0.186",
     "lucide-react": "^0.125.0",
-    "next": "13.2.3",
+    "next": "^14.2.4",
+    "openai": "^4.52.0",
     "pdf-parse": "1.1.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -30,6 +33,7 @@
     "tailwind-merge": "^1.10.0"
   },
   "devDependencies": {
+    "@types/json2csv": "^5.0.7",
     "@types/node": "^18.14.6",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
