@@ -11,9 +11,9 @@ dotenv.config();
 // Load API key from environment variable or configuration file
 const apiKey = process.env.OPENAI_API_KEY;
 const questionsReferenceFile = 'questions_comprehensive.txt';
-const questionsGeneratedFile = 'generated_answers.txt';
-const evalResFile = 'eval_results.json';
-const csvFile = 'eval_results.csv';
+const questionsGeneratedFile = 'generated_answers_k20.txt';
+const evalResFile = 'eval_results_k20_gpt4o.json';
+const csvFile = 'eval_results_k20_gpt4o.csv';
 const openaiApiUrl = 'https://api.openai.com/v1/chat/completions'; // Updated endpoint for chat models
 
 if (!apiKey) {
@@ -95,7 +95,7 @@ const evaluateAnswers = async () => {
                 { role: 'system', content: 'You are a helpful assistant.' },
                 { role: 'user', content: `Q: ${prompt}` },
                 { role: 'assistant', content: `Reference Answer: ${referenceAnswer}` },
-                { role: 'user', content: `Generated Answer: ${generatedAnswer}\n\nPlease provide your evaluation in the following strict format:\nScore: X\nExplanation: ...\nMake sure to write the score exactly in the format "Score: X", without any additional characters or variations. The maximum possible score is 10.` }
+                { role: 'user', content: `Generated Answer: ${generatedAnswer}\n\nPlease compare the generated answer to the reference answer. Please provide your evaluation in the following strict format:\nScore: X\nExplanation: ...\nMake sure to write the score exactly in the format "Score: X", without any additional characters or variations. The maximum possible score is 10.` }
             ],
             max_tokens: 150,
             temperature: 0.0,

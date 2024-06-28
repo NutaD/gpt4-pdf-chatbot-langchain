@@ -8,7 +8,7 @@ interface ApiResponse {
 }
 
 const questionId = uuidv4();
-const fileName = 'generated_answers.txt';
+const fileName = 'generated_answers_k20.txt';
 const fileQuestions = 'questions_comprehensive.txt';
 
 // Read questions from the file

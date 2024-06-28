@@ -78,7 +78,7 @@ export default async function handler(
           },
         },
       ],
-      k:4,
+      k:12,
     });
 
     //create chain
