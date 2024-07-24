@@ -1,15 +1,16 @@
 import { promises as fs } from 'fs';
 import axios from 'axios';
 import { v4 as uuidv4 } from "uuid";
-
+import * as dotenv from "dotenv";
 interface ApiResponse {
   text: string;
   sourceDocuments: any[];
 }
-
+dotenv.config();
 const questionId = uuidv4();
-const fileName = 'generated_answers_k20.txt';
-const fileQuestions = 'questions_comprehensive.txt';
+const fileQuestions = process.env.fileQuestions as string;
+const fileAnswers = process.env.fileAnswers as string;
+
 
 // Read questions from the file
 async function readQuestionsFromFile(filePath: string): Promise<string[]> {
@@ -26,7 +27,7 @@ async function processQuestions(questions: string[]) {
         question: question,
         history: [],
         questionId: questionId,
-        maxTokens: 150
+        maxTokens: 200
       };
 
       const response = await axios.post<ApiResponse>('http://localhost:3000/api/chat', requestData);
@@ -36,7 +37,7 @@ async function processQuestions(questions: string[]) {
       console.log(logMessage);
 
       // Append log to a file
-      await fs.appendFile(fileName, logMessage, { flag: 'a' });
+      await fs.appendFile(fileAnswers, logMessage, { flag: 'a' });
     } catch (error) {
       let errorMessage = 'Unknown error';
       if (error instanceof Error) {
@@ -48,7 +49,7 @@ async function processQuestions(questions: string[]) {
       }
 
       console.error("Error: ", errorMessage);
-      await fs.appendFile(fileName, `Error: ${errorMessage}\n`, { flag: 'a' });
+      await fs.appendFile(fileAnswers, `Error: ${errorMessage}\n`, { flag: 'a' });
     }
   }
 }
@@ -56,7 +57,7 @@ async function processQuestions(questions: string[]) {
 // Main function to execute the process
 async function main() {
   // Clear the contents of the file before every run
-  await fs.writeFile(fileName, '');
+  await fs.writeFile(fileAnswers, '');
 
   const questions = await readQuestionsFromFile(fileQuestions);
   await processQuestions(questions);

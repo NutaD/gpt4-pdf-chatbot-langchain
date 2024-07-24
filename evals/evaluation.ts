@@ -8,13 +8,36 @@ import * as json2csv from 'json2csv';
 // Load environment variables from .env file
 dotenv.config();
 
-// Load API key from environment variable or configuration file
+// Load API key and model from environment variables or configuration file
 const apiKey = process.env.OPENAI_API_KEY;
-const questionsReferenceFile = 'questions_comprehensive.txt';
-const questionsGeneratedFile = 'generated_answers_k20.txt';
-const evalResFile = 'eval_results_k20_gpt4o.json';
-const csvFile = 'eval_results_k20_gpt4o.csv';
+const evalModel = process.env.EvalModel as string;
+const questionsReferenceFile = process.env.fileQuestions as string;
+const questionsGeneratedFile = process.env.fileAnswers as string;
+const evalResFileJson = process.env.evalResFileJson as string;
+const evalResFileCsv = process.env.evalResFileCsv as string;
 const openaiApiUrl = 'https://api.openai.com/v1/chat/completions'; // Updated endpoint for chat models
+
+const EVAL_PROMPT = 'Please compare the generated answer to the reference answer. Provide your evaluation in the following strict format:\n' +
+    '\n' +
+    'Score: X\n' +
+    '\n' +
+    'Explanation: ...\n' +
+    '\n' +
+    'Evaluation Criteria:\n' +
+    'Accuracy: How well does the generated answer match the reference answer in terms of factual correctness and completeness?\n' +
+    'Relevance: How relevant is the generated answer to the prompt or question asked?\n' +
+    'Clarity: How clear and understandable is the generated answer compared to the reference answer?\n' +
+    'Conciseness: Does the generated answer provide the necessary information without unnecessary verbosity?\n' +
+    'Coherence: Is the generated answer logically structured and does it flow well?\n' +
+    'Style: How well does the generated answer match the tone and style of the reference answer, if applicable?\n' +
+    'Scoring Guide:\n' +
+    'Score: 10: The generated answer is almost identical to the reference answer in all aspects.\n' +
+    'Score: 8-9: The generated answer is very close to the reference answer, with minor differences that do not affect the overall quality.\n' +
+    'Score: 6-7: The generated answer matches the reference answer in most aspects but has some noticeable differences.\n' +
+    'Score: 4-5: The generated answer has several differences from the reference answer and only partially matches it.\n' +
+    'Score: 2-3: The generated answer has significant differences and only matches the reference answer in a few aspects.\n' +
+    'Score: 0-1: The generated answer does not match the reference answer in most aspects and has major differences.\n' +
+    'Make sure to write the score exactly in the format "Score: X", without any additional characters or variations. The maximum possible score is 10.'
 
 if (!apiKey) {
     console.error('OpenAI API key is not set. Please check your .env file.');
@@ -69,6 +92,23 @@ const parseQA = (lines: string[]): { question: string, answer: string }[] => {
     return qaList;
 };
 
+// Function to get the request body based on the model
+const getRequestBody = (model: string, prompt: string, referenceAnswer: string, generatedAnswer: string) => {
+    const messages = [
+        { role: 'system', content: 'You are a helpful assistant.' },
+        { role: 'user', content: `Q: ${prompt}` },
+        { role: 'assistant', content: `Reference Answer: ${referenceAnswer}` },
+        { role: 'user', content: `Generated Answer: ${generatedAnswer}\n\n${EVAL_PROMPT}` }
+    ];
+
+    return {
+        model: model,
+        messages: messages,
+        max_tokens: 150,
+        temperature: 0.0
+    };
+};
+
 // Function to evaluate answers
 const evaluateAnswers = async () => {
     // Read questions and answers
@@ -89,17 +129,7 @@ const evaluateAnswers = async () => {
     for (const item of evalData) {
         const { prompt, referenceAnswer, generatedAnswer } = item;
 
-        const requestBody = {
-            model: 'gpt-3.5-turbo', // Updated to a valid chat model
-            messages: [
-                { role: 'system', content: 'You are a helpful assistant.' },
-                { role: 'user', content: `Q: ${prompt}` },
-                { role: 'assistant', content: `Reference Answer: ${referenceAnswer}` },
-                { role: 'user', content: `Generated Answer: ${generatedAnswer}\n\nPlease compare the generated answer to the reference answer. Please provide your evaluation in the following strict format:\nScore: X\nExplanation: ...\nMake sure to write the score exactly in the format "Score: X", without any additional characters or variations. The maximum possible score is 10.` }
-            ],
-            max_tokens: 150,
-            temperature: 0.0,
-        };
+        const requestBody = getRequestBody(evalModel, prompt, referenceAnswer, generatedAnswer);
 
         try {
             console.log(`Using API Key: ${apiKey ? '***' : 'not set'}`); // Debugging line to check API key presence
@@ -137,8 +167,8 @@ const evaluateAnswers = async () => {
     }
 
     // Save the results to a JSON file
-    await fsPromises.writeFile(evalResFile, JSON.stringify(results, null, 2));
-    console.log(`Evaluation results saved to ${evalResFile}`);
+    await fsPromises.writeFile(evalResFileJson, JSON.stringify(results, null, 2));
+    console.log(`Evaluation results saved to ${evalResFileJson}`);
 
     // Convert JSON to CSV
     try {
@@ -152,8 +182,8 @@ const evaluateAnswers = async () => {
         const csv = json2csv.parse(jsonArray, opts);
 
         // Write the CSV file
-        await fsPromises.writeFile(csvFile, csv);
-        console.log(`CSV file saved to ${csvFile}`);
+        await fsPromises.writeFile(evalResFileCsv, csv);
+        console.log(`CSV file saved to ${evalResFileCsv}`);
     } catch (error) {
         console.error('Error converting JSON to CSV:', error);
     }

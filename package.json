@@ -13,8 +13,9 @@
     "lint": "eslint --ignore-path .gitignore \"**/*.+(ts|js|tsx)\"",
     "format": "prettier --ignore-path .gitignore \"**/*.+(ts|js|tsx)\" --write",
     "ingest": "tsx -r dotenv/config scripts/ingest-data.ts",
-    "aggregate-csv": "c:\\users\\anna-\\appdata\\local\\programs\\python\\python39\\python results_aggregation/aggregate_csv.py"
-
+    "aggregate-csv": "c:\\users\\anna-\\appdata\\local\\programs\\python\\python39\\python results_aggregation/aggregate_csv.py",
+    "analyze_results": "c:\\users\\anna-\\appdata\\local\\programs\\python\\python39\\python results_aggregation/analyze_results.py",
+    "test_questions": "node tests/test.cjs"
   },
   "dependencies": {
     "@microsoft/fetch-event-source": "^2.0.1",
